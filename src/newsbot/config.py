@@ -290,8 +290,6 @@ def validate_for_mode(settings: Settings) -> list[str]:
             problems.append("TELEGRAM_CHAT_ID fehlt")
         if s.telegram_test_chat_id is not None and s.telegram_test_chat_id == s.telegram_chat_id:
             problems.append("Test- und Produktionsgruppe dürfen nicht identisch sein")
-    elif s.telegram_test_chat_id is not None and not s.telegram_bot_token:
-        problems.append("TELEGRAM_TEST_CHAT_ID gesetzt, aber TELEGRAM_BOT_TOKEN fehlt")
     if settings.config.llm.enabled is True and not s.anthropic_api_key:
         problems.append("llm.enabled=true, aber ANTHROPIC_API_KEY fehlt")
     return problems
