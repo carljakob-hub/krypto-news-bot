@@ -186,6 +186,7 @@ Ehrlich markiert, damit nichts als fertig gilt, was es nicht ist:
 
 ## 9. Weitere Anleitungen
 
+- [docs/GITHUB_BETRIEB.md](docs/GITHUB_BETRIEB.md) – **kostenloser Betrieb über GitHub, ohne Server**
 - [docs/SCHNELLSTART.md](docs/SCHNELLSTART.md) – **Schritt für Schritt zum laufenden Bot (hier anfangen)**
 - [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md) – Prüfregeln, Relevanzbewertung, Datenbank
 - [docs/TELEGRAM_SETUP.md](docs/TELEGRAM_SETUP.md) – Bot erstellen, zur Gruppe hinzufügen, IDs ermitteln
