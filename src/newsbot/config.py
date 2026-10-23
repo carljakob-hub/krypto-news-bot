@@ -225,7 +225,9 @@ def _describe_bad_token(value: str) -> str:
     if value.startswith("@") or value.lower().endswith("bot"):
         return "vermutlich der Benutzername des Bots"
     if ":" not in value:
-        return "ohne Doppelpunkt"
+        spaces = sum(c.isspace() for c in value)
+        other = sum(not (c.isascii() and (c.isalnum() or c in "_-")) and not c.isspace() for c in value)
+        return f"ohne Doppelpunkt ({spaces} Leerzeichen, {other} Sonderzeichen)"
     return "Schlüsselteil zu kurz"
 
 
@@ -233,7 +235,10 @@ def load_secrets(env: dict[str, str] | None = None) -> Secrets:
     env = dict(os.environ) if env is None else env
     token = (env.get("TELEGRAM_BOT_TOKEN") or "").strip() or None
     if token:
-        # Wer die ganze BotFather-Nachricht einfügt, soll trotzdem ans Ziel kommen.
+        # Handy-Tastaturen ersetzen gern Zeichen; wer die ganze BotFather-Nachricht
+        # einfügt, soll trotzdem ans Ziel kommen.
+        token = re.sub(r"[\uff1a\u2236\ua789\u02d0\u02f8\ufe55\ufe13]", ":", token)
+        token = re.sub(r"(?<=:)\s+|\s+(?=:)", "", token)
         found = re.search(r"(?<!\d)\d{6,12}:[A-Za-z0-9_-]{25,}", token)
         if found:
             token = found.group(0)
