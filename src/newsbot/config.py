@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import unicodedata
 from enum import Enum
 from pathlib import Path
 from typing import Literal
@@ -227,7 +228,11 @@ def _describe_bad_token(value: str) -> str:
     if ":" not in value:
         spaces = sum(c.isspace() for c in value)
         other = sum(not (c.isascii() and (c.isalnum() or c in "_-")) and not c.isspace() for c in value)
-        return f"ohne Doppelpunkt ({spaces} Leerzeichen, {other} Sonderzeichen)"
+        names = sorted({unicodedata.name(c, hex(ord(c))) for c in value
+                        if not (c.isascii() and (c.isalnum() or c in "_-")) and not c.isspace()})
+        digits = len(value) - len(value.lstrip("0123456789"))
+        return (f"ohne Doppelpunkt ({spaces} Leerzeichen, {other} Sonderzeichen: {', '.join(names) or '-'}; "
+                f"beginnt mit {digits} Ziffern)")
     return "Schlüsselteil zu kurz"
 
 
