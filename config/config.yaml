@@ -31,6 +31,8 @@ relevance:
   min_level_to_publish: MITTEL     # HOCH | MITTEL | NIEDRIG
   publish_partial_only_if: HOCH    # TEILWEISE BESTÄTIGT nur bei dieser Relevanz
   novelty_hours: 6                 # Ereignisse, die länger bekannt sind, verlieren Neuheitswert
+  medium_min_score: 4.5            # etwas strenger als Standard (4.0): nur News, die den Markt bewegen können
+  medium_requires_direction: true  # MITTEL nur mit klarer Einschätzung (eher positiv/negativ)
 
 publishing:
   max_posts_per_hour: 4

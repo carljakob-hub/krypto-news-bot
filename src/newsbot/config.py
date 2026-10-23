@@ -68,6 +68,8 @@ class RelevanceConfig(BaseModel):
     min_level_to_publish: Level = "MITTEL"
     publish_partial_only_if: Level = "HOCH"
     novelty_hours: float = Field(6, gt=0)
+    medium_min_score: float = Field(4.0, ge=0)  # ab dieser Punktzahl gilt ein Ereignis als MITTEL
+    medium_requires_direction: bool = False     # MITTEL nur posten, wenn eine klare Richtung erkennbar ist
 
 
 class PublishingConfig(BaseModel):

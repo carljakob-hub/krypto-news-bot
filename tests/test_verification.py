@@ -213,3 +213,6 @@ def test_outlook_detection():
     assert detect_outlook("SEC approves spot Solana ETF, inflows expected") == "positiv"
     assert detect_outlook("SEC drops lawsuit against Coinbase") == "positiv"
     assert detect_outlook("Ethereum developers schedule community call") == "neutral"
+    assert detect_outlook("Federal Reserve cuts interest rate by 25 basis points") == "positiv"
+    assert detect_outlook("Fed lowers federal funds rate by 25 basis points") == "positiv"
+    assert detect_outlook("ECB raises key interest rates") == "negativ"

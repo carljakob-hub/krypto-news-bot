@@ -16,7 +16,8 @@ _POS = [
     r"\binflows?\b", r"zuflüsse", r"\bapprov(e|es|ed|al)\b", r"genehmig", r"zugelassen", r"\bgreen ?light",
     r"\blaunch(es|ed)?\b", r"record high", r"all-time high", r"rekordhoch", r"\bsurg(e|es|ed|ing)\b",
     r"\brall(y|ies|ied)\b", r"\bjump(s|ed)?\b", r"\bsoar(s|ed)?\b", r"\bgains?\b", r"\brises?\b",
-    r"\brate cuts?\b", r"zinssenkung", r"\bdovish\b", r"\bdismiss(es|ed)\b", r"\bdrops? (the )?(lawsuit|case|charges)",
+    r"\brate cuts?\b", r"\bcut(s|ting)? (the )?(interest |federal funds )?rates?\b", r"\blower(s|ed|ing)? (the )?[a-z ]{0,20}rates?\b",
+    r"zinssenkung", r"senkt (den )?leitzins", r"\bdovish\b", r"\bdismiss(es|ed)\b", r"\bdrops? (the )?(lawsuit|case|charges)",
     r"\bsettle(s|d|ment)?\b", r"\badopt(s|ed|ion)\b", r"\bpartnership\b", r"\bbuys?\b", r"\bpurchase[sd]?\b",
     r"\bupgrade[sd]?\b", r"\bclarity\b",
 ]
@@ -26,7 +27,7 @@ _NEG = [
     r"\bhack(s|ed|er|ers)?\b", r"\bexploit(s|ed)?\b", r"\bstolen\b", r"\bdrain(s|ed)?\b", r"\blawsuits?\b", r"\bsues?\b",
     r"\bsued\b", r"\bcharged?\b", r"\bfraud\b", r"\bban(s|ned)?\b", r"verbot", r"\breject(s|ed|ion)?\b", r"abgelehnt",
     r"\bdelay(s|ed)?\b", r"verschoben", r"\bliquidat", r"\binvestigat", r"\bprobe\b", r"\bsubpoena", r"\bbankrupt",
-    r"insolven", r"\brate hikes?\b", r"zinserhöhung", r"\bhawkish\b", r"\boutage\b", r"\bhalt(s|ed)?\b",
+    r"insolven", r"\brate hikes?\b", r"\b(hike[sd]?|raise[sd]?) (the )?[a-z ]{0,20}rates?\b", r"zinserhöhung", r"erhöht (den )?leitzins", r"\bhawkish\b", r"\boutage\b", r"\bhalt(s|ed)?\b",
     r"\bdelist", r"\bsanction", r"\bscrutiny\b", r"\bseeks answers\b", r"\bwarn(s|ed|ing)?\b", r"\bturns red\b",
 ]
 _POS_RE = [re.compile(p, re.I) for p in _POS]

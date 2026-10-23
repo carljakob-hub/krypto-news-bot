@@ -175,6 +175,10 @@ class Pipeline:
         if v.status is VerificationStatus.PARTIAL and rel.level.rank < RelevanceLevel(self.cfg.relevance.publish_partial_only_if).rank:
             return False
         content = await self.summarizer.compose(items, v, rel, now)
+        if (rel.level is RelevanceLevel.MEDIUM and self.cfg.relevance.medium_requires_direction
+                and content.outlook not in ("positiv", "negativ")):
+            log.info("Cluster %s: MITTEL ohne klare Marktrichtung – nicht veröffentlicht", cluster["id"])
+            return False
         names = {i.url: self.cfg.source(i.source_id).name for i in items if self.cfg.source(i.source_id)}
         try:
             text = format_post(content, v, rel, names, self.cfg, now, test_mode=self.settings.mode is Mode.TEST and self.cfg.publishing.mark_test_posts)

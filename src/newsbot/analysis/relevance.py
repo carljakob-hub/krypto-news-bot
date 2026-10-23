@@ -198,7 +198,7 @@ class RelevanceAnalyzer:
 
         level = (
             RelevanceLevel.HIGH if score >= _LEVEL_THRESHOLDS["HOCH"]
-            else RelevanceLevel.MEDIUM if score >= _LEVEL_THRESHOLDS["MITTEL"]
+            else RelevanceLevel.MEDIUM if score >= self.cfg.relevance.medium_min_score
             else RelevanceLevel.LOW
         )
         return RelevanceResult(level, round(score, 2), assets, [c.key for c in cats], cats[0].horizon, reasons, novelty)

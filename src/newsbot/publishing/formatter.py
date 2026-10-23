@@ -12,7 +12,7 @@ from newsbot.textutils import host_of
 TELEGRAM_LIMIT = 4096
 
 _HEADER = {
-    RelevanceLevel.HIGH: "🚨 <b>WICHTIG</b>",
+    RelevanceLevel.HIGH: "🚨🚨 <b>SEHR WICHTIG</b>",
     RelevanceLevel.MEDIUM: "📰 <b>NEWS</b>",
     RelevanceLevel.LOW: "ℹ️ <b>INFO</b>",
 }

@@ -87,7 +87,7 @@ async def test_verified_story_is_published_once_to_log(app_factory, now):
     assert stats.published == 1
     log = posts_log(settings)
     assert log.count("✅ Verifiziert") == 1
-    assert "[TESTMODUS]" in log and "🚨 <b>WICHTIG</b>" in log
+    assert "[TESTMODUS]" in log and "🚨🚨 <b>SEHR WICHTIG</b>" in log
     assert 'href="https://www.sec.gov/newsroom/press-releases/2026-140"' in log
     assert "Einschätzung:" in log and "BTC" in log and "👀" in log
     assert "Zeitpunkt:" not in log  # kurz halten: Telegram zeigt die Uhrzeit selbst
@@ -255,4 +255,4 @@ async def test_test_mode_marker_can_be_disabled(app_factory, now):
     stats = await app.pipeline.run_cycle(now)
     assert stats.published == 1
     log = posts_log(settings)
-    assert "[TESTMODUS]" not in log and "🚨 <b>WICHTIG</b>" in log
+    assert "[TESTMODUS]" not in log and "🚨🚨 <b>SEHR WICHTIG</b>" in log
