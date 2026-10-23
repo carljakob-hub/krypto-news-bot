@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from enum import Enum
 from pathlib import Path
 from typing import Literal
@@ -217,11 +218,30 @@ def _parse_chat_id(name: str, value: str | None) -> int | None:
         raise ConfigError(f"{name} muss eine Zahl sein") from exc
 
 
+def _describe_bad_token(value: str) -> str:
+    """Beschreibt einen falschen Token-Wert, ohne ihn preiszugeben."""
+    if value.lstrip("-").isdigit():
+        return "nur Ziffern (vermutlich eine Gruppen- oder Nutzer-ID)"
+    if value.startswith("@") or value.lower().endswith("bot"):
+        return "vermutlich der Benutzername des Bots"
+    if ":" not in value:
+        return "ohne Doppelpunkt"
+    return "Schlüsselteil zu kurz"
+
+
 def load_secrets(env: dict[str, str] | None = None) -> Secrets:
     env = dict(os.environ) if env is None else env
     token = (env.get("TELEGRAM_BOT_TOKEN") or "").strip() or None
-    if token and ":" not in token:
-        raise ConfigError("TELEGRAM_BOT_TOKEN hat ein ungültiges Format (erwartet <zahl>:<schlüssel>)")
+    if token:
+        # Wer die ganze BotFather-Nachricht einfügt, soll trotzdem ans Ziel kommen.
+        found = re.search(r"(?<!\d)\d{6,12}:[A-Za-z0-9_-]{25,}", token)
+        if found:
+            token = found.group(0)
+        else:
+            raise ConfigError(
+                "TELEGRAM_BOT_TOKEN hat ein ungültiges Format (erwartet <zahl>:<schlüssel>); "
+                f"eingetragen sind {len(token)} Zeichen, {_describe_bad_token(token)}"
+            )
     return Secrets(
         telegram_bot_token=token,
         telegram_chat_id=_parse_chat_id("TELEGRAM_CHAT_ID", env.get("TELEGRAM_CHAT_ID")),
