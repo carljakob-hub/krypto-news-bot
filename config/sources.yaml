@@ -9,8 +9,8 @@
 # owner_group:  Quellen derselben Gruppe gelten NICHT als unabhängig voneinander
 # official_domains: Domains, deren Dokumente als Primärbeleg gelten
 #
-# HINWEIS: Die Feed-URLs wurden nach bestem Wissen eingetragen, konnten in der
-# Entwicklungsumgebung aber nicht live abgerufen werden. Prüfe sie mit
+# HINWEIS: Am 23.10.2026 live geprüft (GitHub Actions): 10 von 12 Quellen erreichbar,
+# ESMA und Bitcoin Magazine blockieren automatische Abrufe und sind deshalb aus. Erneut prüfen mit
 #   newsbot check-sources
 # und deaktiviere (enabled: false) oder korrigiere Quellen, die fehlschlagen.
 # Prüfe außerdem die Nutzungsbedingungen jedes Anbieters.
@@ -119,7 +119,7 @@ sources:
     official_domains: [esma.europa.eu]
     poll_interval_seconds: 900
     topics: [regulation]
-    enabled: true
+    enabled: false   # blockiert automatische Abrufe (HTTP 403, geprüft am 23.10.2026)
 
   # --- Etablierte Nachrichtenanbieter -----------------------------------------
   - id: coindesk
@@ -157,6 +157,7 @@ sources:
     trust: 0.6
     owner_group: btc_inc
     poll_interval_seconds: 600
+    enabled: false   # blockiert automatische Abrufe (HTTP 403, geprüft am 23.10.2026)
 
   # --- Weitere Quellen (standardmäßig aus) ------------------------------------
   - id: rekt_news
