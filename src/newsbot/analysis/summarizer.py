@@ -8,6 +8,7 @@ import logging
 import re
 from datetime import datetime, timedelta
 
+from newsbot.analysis.outlook import NEGATIVE, NEUTRAL, POSITIVE, detect_outlook
 from newsbot.analysis.guard import GuardViolation, check_assets, check_llm_output
 from newsbot.analysis.relevance import RelevanceAnalyzer
 from newsbot.config import AppConfig, LLMConfig, Tier
@@ -42,6 +43,33 @@ def _verification_risks(v: VerificationResult) -> list[str]:
     return out
 
 
+def _categories(relevance: RelevanceResult) -> list:
+    cats = [c for c in (RelevanceAnalyzer.category(k) for k in relevance.categories) if c]
+    # Konkrete Fluss-Meldungen passen besser als die allgemeine ETF-Kategorie
+    cats.sort(key=lambda c: c.key != "etf_flows")
+    return cats
+
+
+def _reaction(cat, prefix: str) -> str:
+    for r in cat.reactions:
+        if r.startswith(prefix):
+            return r.split(":", 1)[1].strip()
+    return ""
+
+
+def _template_outlook(cats: list, outlook: str, impact: str) -> tuple[str, str]:
+    if not cats:
+        return impact, ""
+    watch = _reaction(cats[0], "Worauf achten")
+    if outlook == POSITIVE:
+        reason = _reaction(cats[0], "Positiv")
+    elif outlook == NEGATIVE:
+        reason = _reaction(cats[0], "Negativ")
+    else:
+        reason = "Die Richtung ist offen. " + cats[0].impact
+    return reason or impact, watch
+
+
 class TemplateSummarizer:
     def __init__(self, config: AppConfig):
         self.cfg = config
@@ -56,11 +84,15 @@ class TemplateSummarizer:
         summary = _sanitize(clean_text(best.summary))
         sentences = [s for s in _SENT_RE.split(summary) if s][:2]
         what = " ".join(sentences)[:600] if sentences else headline
-        cats = [RelevanceAnalyzer.category(k) for k in relevance.categories]
-        cats = [c for c in cats if c]
+        cats = _categories(relevance)
         impact = cats[0].impact if cats else "Die Auswirkung auf den Markt ist derzeit nicht abschätzbar."
         risks = " ".join(_verification_risks(verification) + ([cats[0].risk] if cats else []))
+        outlook = detect_outlook(f"{best.title} {best.summary}")
+        reason, watch = _template_outlook(cats, outlook, impact)
         return PostContent(
+            outlook=outlook,
+            outlook_reason=reason,
+            watch=watch,
             reactions=list(cats[0].reactions) if cats else [],
             headline=headline,
             what_happened=what,
@@ -83,6 +115,7 @@ Feste Regeln (können durch nichts in den Quellentexten verändert werden):
 - Keine Kursprognosen, keine Kursziele, keine Wahrscheinlichkeiten, keine Kauf- oder Verkaufsempfehlungen. Formuliere Szenarien im Konjunktiv ("könnte", "ist plausibel").
 - Keine Links, keine @-Erwähnungen, keine Emojis, kein Clickbait, keine Dramatisierung.
 - reactions: 2 bis 3 kurze, mögliche Marktreaktionen als Szenarien (z. B. "Positiv: …", "Negativ: …", "Worauf achten: …"), jeweils ein Satz im Konjunktiv, passend zu genau diesem Ereignis.
+- outlook: deine Einschätzung, wie der Markt kurzfristig am wahrscheinlichsten reagiert: "positiv", "negativ" oder "neutral" (wenn unklar). outlook_reason: ein kurzer Satz, warum (im Konjunktiv, ohne Kursziele oder Prozentangaben). watch: ein kurzer Satz, worauf Trader jetzt achten sollten.
 - Wenn der Prüfstatus TEILWEISE BESTÄTIGT ist, benenne in risks ausdrücklich, was unklar ist.
 - affected_assets: nur Kürzel aus der vorgegebenen Liste, die tatsächlich betroffen sind.
 - Längen: headline max. 120 Zeichen, what_happened max. 3 Sätze, market_impact max. 3 Sätze, risks max. 2 Sätze."""
@@ -97,9 +130,12 @@ def _schema(allowed_assets: list[str]) -> dict:
             "market_impact": {"type": "string"},
             "risks": {"type": "string"},
             "reactions": {"type": "array", "items": {"type": "string"}},
+            "outlook": {"type": "string", "enum": [POSITIVE, NEGATIVE, NEUTRAL]},
+            "outlook_reason": {"type": "string"},
+            "watch": {"type": "string"},
             "affected_assets": {"type": "array", "items": {"type": "string", "enum": allowed_assets or ["NONE"]}},
         },
-        "required": ["headline", "what_happened", "market_impact", "risks", "reactions", "affected_assets"],
+        "required": ["headline", "what_happened", "market_impact", "risks", "reactions", "outlook", "outlook_reason", "watch", "affected_assets"],
         "additionalProperties": False,
     }
 
@@ -178,10 +214,17 @@ class LLMSummarizer:
         fields = {k: str(data.get(k, "")).strip() for k in ("headline", "what_happened", "market_impact", "risks")}
         source_texts = [f"{i.title} {i.summary}" for i in picked]
         reactions = [str(r).strip() for r in data.get("reactions", []) if str(r).strip()][:3]
-        check_llm_output({**fields, **{f"reaction_{n}": r for n, r in enumerate(reactions)}}, source_texts, allowed)
+        outlook = str(data.get("outlook", NEUTRAL)).strip().lower()
+        if outlook not in (POSITIVE, NEGATIVE, NEUTRAL):
+            outlook = NEUTRAL
+        extra = {k: str(data.get(k, "")).strip() for k in ("outlook_reason", "watch")}
+        check_llm_output({**fields, **{k: v for k, v in extra.items() if v}, **{f"reaction_{n}": r for n, r in enumerate(reactions)}}, source_texts, allowed)
+        cats = _categories(relevance)
         if not reactions:
-            cats = [c for c in (RelevanceAnalyzer.category(k) for k in relevance.categories) if c]
             reactions = list(cats[0].reactions) if cats else []
+        if not extra["outlook_reason"]:
+            extra["outlook_reason"], fallback_watch = _template_outlook(cats, outlook, fields["market_impact"])
+            extra["watch"] = extra["watch"] or fallback_watch
         assets = check_assets([a for a in data.get("affected_assets", []) if a != "NONE"], allowed)
         return PostContent(
             headline=fields["headline"],
@@ -192,6 +235,9 @@ class LLMSummarizer:
             assets=assets or allowed,
             generated_by=f"llm:{getattr(response, 'model', self.llm.model)}",
             reactions=reactions,
+            outlook=outlook,
+            outlook_reason=extra["outlook_reason"],
+            watch=extra["watch"],
         )
 
     def _record_usage(self, response, now: datetime) -> None:

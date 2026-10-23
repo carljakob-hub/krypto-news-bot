@@ -86,11 +86,11 @@ async def test_verified_story_is_published_once_to_log(app_factory, now):
     stats = await app.pipeline.run_cycle(now)
     assert stats.published == 1
     log = posts_log(settings)
-    assert log.count("KRYPTONEWS") == 1
-    assert "[TESTMODUS]" in log and "HOHE RELEVANZ" in log
-    assert "VERIFIZIERT" in log and 'href="https://www.sec.gov/newsroom/press-releases/2026-140"' in log
-    assert "BTC" in log and "Zeitpunkt:" in log
-    assert "Mögliche Reaktionen (Szenarien, keine Prognose):" in log and "• Positiv:" in log
+    assert log.count("✅ Verifiziert") == 1
+    assert "[TESTMODUS]" in log and "🚨 <b>WICHTIG</b>" in log
+    assert 'href="https://www.sec.gov/newsroom/press-releases/2026-140"' in log
+    assert "Einschätzung:" in log and "BTC" in log and "👀" in log
+    assert "Zeitpunkt:" not in log  # kurz halten: Telegram zeigt die Uhrzeit selbst
     # gespeicherte Belege
     assert app.db.one("SELECT COUNT(*) n FROM evidence WHERE kind='primary_source'")["n"] >= 1
 
@@ -103,7 +103,7 @@ async def test_repeated_processing_does_not_republish(app_factory, now):
     fetcher.responses = story_feeds(settings)
     stats = await app.pipeline.run_cycle(now + timedelta(minutes=10))
     assert stats.items_new == 0 and stats.published == 0
-    assert posts_log(settings).count("KRYPTONEWS") == 1
+    assert posts_log(settings).count("✅ Verifiziert") == 1
 
 
 async def test_same_story_new_wording_from_new_source_not_reposted(app_factory, now):
@@ -172,7 +172,7 @@ async def test_telegram_outage_retries_later_without_duplicate(app_factory, now)
     assert flush.sent == 1 and len(tg.sent) == 1
     flush = await app.pipeline.publisher.flush(now + timedelta(minutes=30))
     assert flush.sent == 0 and len(tg.sent) == 1
-    assert posts_log(settings).count("KRYPTONEWS") == 1
+    assert posts_log(settings).count("✅ Verifiziert") == 1
 
 
 async def test_invalid_token_triggers_alert(app_factory, now, caplog):
@@ -255,4 +255,4 @@ async def test_test_mode_marker_can_be_disabled(app_factory, now):
     stats = await app.pipeline.run_cycle(now)
     assert stats.published == 1
     log = posts_log(settings)
-    assert "[TESTMODUS]" not in log and "HOHE RELEVANZ" in log
+    assert "[TESTMODUS]" not in log and "🚨 <b>WICHTIG</b>" in log

@@ -20,7 +20,7 @@ _FORBIDDEN = [
 ]
 _URL_RE = re.compile(r"https?://|www\.|t\.me/|\b[a-z0-9-]+\.(com|io|org|net|xyz|gg|me)\b", re.I)
 _MENTION_RE = re.compile(r"(^|\s)[@/][A-Za-z0-9_]{3,}")
-_MAX_FIELD = {"headline": 140, "what_happened": 900, "market_impact": 600, "risks": 500, "reaction": 300}
+_MAX_FIELD = {"headline": 140, "what_happened": 900, "market_impact": 600, "risks": 500, "reaction": 300, "outlook_reason": 300, "watch": 300}
 
 
 class GuardViolation(Exception):

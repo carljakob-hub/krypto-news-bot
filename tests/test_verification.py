@@ -205,3 +205,11 @@ async def test_unknown_source_ignored(verifier, now):
     a = item("not_configured", "Bitcoin to $1m tomorrow")
     r = await verifier.verify([a], now)
     assert r.status is S.UNCONFIRMED
+
+
+def test_outlook_detection():
+    from newsbot.analysis.outlook import detect_outlook
+    assert detect_outlook("Bitcoin ETFs Bleed $636 Million as October Turns Red Again") == "negativ"
+    assert detect_outlook("SEC approves spot Solana ETF, inflows expected") == "positiv"
+    assert detect_outlook("SEC drops lawsuit against Coinbase") == "positiv"
+    assert detect_outlook("Ethereum developers schedule community call") == "neutral"

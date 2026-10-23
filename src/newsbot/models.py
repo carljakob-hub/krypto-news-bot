@@ -85,6 +85,9 @@ class PostContent:
     assets: list[str]
     generated_by: str  # "template" oder "llm:<modell>"
     reactions: list[str] = field(default_factory=list)  # mögliche Marktreaktionen als Szenarien
+    outlook: str = "neutral"      # Einschätzung der wahrscheinlichsten Reaktion: positiv | negativ | neutral
+    outlook_reason: str = ""      # ein Satz Begründung
+    watch: str = ""               # worauf man jetzt achten sollte
 
 
 @dataclass
