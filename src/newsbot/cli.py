@@ -166,7 +166,7 @@ async def _preflight(settings: Settings, skip_tests: bool) -> int:
     return 0 if ok else 1
 
 
-async def _run(settings: Settings, once: bool) -> int:
+async def _run(settings: Settings, once: bool, max_cycles: int | None = None) -> int:
     from newsbot.scheduler import run_forever
 
     problems = validate_for_mode(settings)
@@ -192,7 +192,7 @@ async def _run(settings: Settings, once: bool) -> int:
                 "fehler": stats.errors,
             }, ensure_ascii=False, indent=2))
             return 0 if stats.status != "failed" else 1
-        await run_forever(app.pipeline)
+        await run_forever(app.pipeline, max_cycles=max_cycles)
         return 0
     finally:
         await app.aclose()
@@ -248,7 +248,8 @@ def main(argv: list[str] | None = None) -> int:
     p_pf = sub.add_parser("preflight", help="Vollprüfung vor dem Produktivbetrieb")
     p_pf.add_argument("--skip-tests", action="store_true")
     sub.add_parser("run-once", help="Einen Durchlauf ausführen")
-    sub.add_parser("run", help="Dauerbetrieb starten")
+    p_run = sub.add_parser("run", help="Dauerbetrieb starten")
+    p_run.add_argument("--max-cycles", type=int, default=None, help="Nach N Durchläufen beenden (z. B. für GitHub Actions)")
     p_st = sub.add_parser("status", help="Monitoring-Bericht anzeigen")
     p_st.add_argument("--hours", type=int, default=24)
     sub.add_parser("health", help="Healthcheck (Exit-Code 0 = gesund)")
@@ -281,7 +282,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "run-once":
         return asyncio.run(_run(settings, once=True))
     if args.cmd == "run":
-        return asyncio.run(_run(settings, once=False))
+        return asyncio.run(_run(settings, once=False, max_cycles=args.max_cycles))
     if args.cmd == "status":
         return cmd_status(settings, args)
     if args.cmd == "health":

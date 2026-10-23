@@ -159,7 +159,7 @@ Im Testmodus steht zusätzlich `🧪 [TESTMODUS]` darüber.
 
 ### Wann wird gepostet?
 
-Es gibt keinen festen Zeitplan. Der Bot prüft jede Minute, welche Quellen fällig sind (Primärquellen alle 3–5 Min., Medien alle 3–10 Min.), und postet, **sobald** eine Meldung verifiziert und mindestens MITTEL relevant ist. NIEDRIG wird nie veröffentlicht. Ist nichts Wichtiges passiert, bleibt die Gruppe still. Obergrenzen: 4 Beiträge pro Stunde, 24 pro Tag, mind. 4 Min. Abstand (HOCH darf den Abstand überspringen). Alles in `config/config.yaml` einstellbar (`relevance.min_level_to_publish: HOCH` = nur wichtige).
+Es gibt keinen festen Zeitplan. Der Bot prüft jede Minute, welche Quellen fällig sind (die meisten Quellen jede Minute, Blogs alle 5 Min.), und postet, **sobald** eine Meldung verifiziert und mindestens MITTEL relevant ist. NIEDRIG wird nie veröffentlicht. Ist nichts Wichtiges passiert, bleibt die Gruppe still. Obergrenzen: 4 Beiträge pro Stunde, 24 pro Tag, mind. 4 Min. Abstand (HOCH darf den Abstand überspringen). Alles in `config/config.yaml` einstellbar (`relevance.min_level_to_publish: HOCH` = nur wichtige).
 
 ## 7. Kosten (Schätzung, bitte selbst prüfen)
 

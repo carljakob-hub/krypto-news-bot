@@ -1,6 +1,6 @@
 # Betrieb kostenlos über GitHub (ohne eigenen Server)
 
-GitHub startet den Bot automatisch etwa alle 5–10 Minuten (`.github/workflows/newsbot.yml`).
+GitHub startet den Bot etwa alle 5–10 Minuten (`.github/workflows/newsbot.yml`). Jeder Lauf prüft fünfmal im Minutentakt (`newsbot run --max-cycles 5`), die Quellen werden also etwa jede Minute abgefragt.
 Datenbank und Beitragsprotokoll werden zwischen den Läufen im Branch `state` gespeichert.
 
 ## Zugangsdaten eintragen (einmalig)

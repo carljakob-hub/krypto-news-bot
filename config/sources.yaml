@@ -63,7 +63,7 @@ sources:
     trust: 1.0
     owner_group: sec
     official_domains: [sec.gov]
-    poll_interval_seconds: 180
+    poll_interval_seconds: 60
     topics: [regulation, etf]
   - id: fed_press
     name: "Federal Reserve – Press Releases"
@@ -72,7 +72,7 @@ sources:
     trust: 1.0
     owner_group: fed
     official_domains: [federalreserve.gov]
-    poll_interval_seconds: 180
+    poll_interval_seconds: 60
     topics: [macro, central_bank]
   - id: ecb_press
     name: "Europäische Zentralbank – Pressemitteilungen"
@@ -81,7 +81,7 @@ sources:
     trust: 1.0
     owner_group: ecb
     official_domains: [ecb.europa.eu]
-    poll_interval_seconds: 300
+    poll_interval_seconds: 60
     topics: [macro, central_bank, regulation]
   - id: cftc_press
     name: "U.S. CFTC – General Press Releases"
@@ -90,7 +90,7 @@ sources:
     trust: 1.0
     owner_group: cftc
     official_domains: [cftc.gov]
-    poll_interval_seconds: 300
+    poll_interval_seconds: 60
     topics: [regulation]
   - id: bls_latest
     name: "U.S. Bureau of Labor Statistics – Latest Releases"
@@ -99,7 +99,7 @@ sources:
     trust: 1.0
     owner_group: bls
     official_domains: [bls.gov]
-    poll_interval_seconds: 300
+    poll_interval_seconds: 60
     topics: [macro]
   - id: ethereum_blog
     name: "Ethereum Foundation Blog"
@@ -108,7 +108,7 @@ sources:
     trust: 0.95
     owner_group: ethereum_foundation
     official_domains: [blog.ethereum.org, ethereum.org]
-    poll_interval_seconds: 900
+    poll_interval_seconds: 300
     topics: [network]
   - id: esma_news
     name: "ESMA – News"
@@ -117,7 +117,7 @@ sources:
     trust: 1.0
     owner_group: esma
     official_domains: [esma.europa.eu]
-    poll_interval_seconds: 900
+    poll_interval_seconds: 300
     topics: [regulation]
     enabled: false   # blockiert automatische Abrufe (HTTP 403, geprüft am 23.10.2026)
 
@@ -128,35 +128,35 @@ sources:
     tier: established
     trust: 0.8
     owner_group: coindesk
-    poll_interval_seconds: 180
+    poll_interval_seconds: 60
   - id: theblock
     name: "The Block"
     url: "https://www.theblock.co/rss.xml"
     tier: established
     trust: 0.8
     owner_group: theblock
-    poll_interval_seconds: 180
+    poll_interval_seconds: 60
   - id: decrypt
     name: "Decrypt"
     url: "https://decrypt.co/feed"
     tier: established
     trust: 0.7
     owner_group: decrypt
-    poll_interval_seconds: 300
+    poll_interval_seconds: 60
   - id: cointelegraph
     name: "Cointelegraph"
     url: "https://cointelegraph.com/rss"
     tier: established
     trust: 0.65
     owner_group: cointelegraph
-    poll_interval_seconds: 300
+    poll_interval_seconds: 60
   - id: bitcoinmagazine
     name: "Bitcoin Magazine"
     url: "https://bitcoinmagazine.com/.rss/full/"
     tier: secondary
     trust: 0.6
     owner_group: btc_inc
-    poll_interval_seconds: 600
+    poll_interval_seconds: 300
     enabled: false   # blockiert automatische Abrufe (HTTP 403, geprüft am 23.10.2026)
 
   # --- Weitere Quellen (standardmäßig aus) ------------------------------------
@@ -166,5 +166,5 @@ sources:
     tier: secondary
     trust: 0.55
     owner_group: rekt
-    poll_interval_seconds: 900
+    poll_interval_seconds: 300
     enabled: false

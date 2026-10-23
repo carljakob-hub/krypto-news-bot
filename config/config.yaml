@@ -3,7 +3,7 @@ timezone: Europe/Berlin
 
 schedule:
   tick_seconds: 60                 # Wie oft der Scheduler prüft, welche Quellen fällig sind
-  default_poll_interval_seconds: 300
+  default_poll_interval_seconds: 60
   cycle_timeout_seconds: 240       # Harte Obergrenze pro Durchlauf (Schutz gegen Hänger)
   max_backoff_seconds: 1800        # Maximale Wartezeit nach wiederholten Fehlern
 

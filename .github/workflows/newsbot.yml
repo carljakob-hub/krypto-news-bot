@@ -65,7 +65,9 @@ jobs:
         env:
           CMD: ${{ github.event.inputs.command || 'run-once' }}
         run: |
-          if [ "$CMD" = "send-test" ]; then newsbot check-telegram --send-test; else newsbot "$CMD"; fi
+          if [ "$CMD" = "send-test" ]; then newsbot check-telegram --send-test
+          elif [ "${{ github.event_name }}" = "schedule" ]; then newsbot run --max-cycles 5   # 5 Prüfungen im Minutentakt
+          else newsbot "$CMD"; fi
 
       - name: Zustand speichern
         if: always()
