@@ -237,6 +237,28 @@ def cmd_explain(settings: Settings, args) -> int:
     return 0
 
 
+async def _announce(settings: Settings, path: str) -> int:
+    """Sendet eine fest hinterlegte Nachricht (z. B. Vorstellung) in die Zielgruppe."""
+    if not settings.secrets.telegram_bot_token:
+        print("✗ TELEGRAM_BOT_TOKEN fehlt")
+        return 1
+    chat_id = settings.target_chat_id()
+    if chat_id is None:
+        print("✗ Keine Zielgruppe konfiguriert")
+        return 1
+    text = Path(path).read_text(encoding="utf-8").strip()
+    client = TelegramClient(settings.secrets.telegram_bot_token, {chat_id})
+    try:
+        await client.send_message(chat_id, text, topic_id=settings.target_topic_id())
+        print(f"✓ Nachricht an {chat_id} gesendet")
+        return 0
+    except TelegramError as exc:
+        print(f"✗ Telegram-Fehler: {exc}")
+        return 1
+    finally:
+        await client.aclose()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="newsbot", description="Verifizierte Krypto-News für Telegram")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -250,6 +272,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("run-once", help="Einen Durchlauf ausführen")
     p_run = sub.add_parser("run", help="Dauerbetrieb starten")
     p_run.add_argument("--max-cycles", type=int, default=None, help="Nach N Durchläufen beenden (z. B. für GitHub Actions)")
+    p_an = sub.add_parser("announce", help="Hinterlegte Nachricht in die Zielgruppe senden")
+    p_an.add_argument("--file", default="config/announcement.html")
     p_st = sub.add_parser("status", help="Monitoring-Bericht anzeigen")
     p_st.add_argument("--hours", type=int, default=24)
     sub.add_parser("health", help="Healthcheck (Exit-Code 0 = gesund)")
@@ -283,6 +307,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(_run(settings, once=True))
     if args.cmd == "run":
         return asyncio.run(_run(settings, once=False, max_cycles=args.max_cycles))
+    if args.cmd == "announce":
+        return asyncio.run(_announce(settings, args.file))
     if args.cmd == "status":
         return cmd_status(settings, args)
     if args.cmd == "health":

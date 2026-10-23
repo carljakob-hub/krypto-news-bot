@@ -12,7 +12,7 @@ on:
         description: "Befehl"
         type: choice
         default: run-once
-        options: [run-once, preflight, status, check-sources, check-telegram, send-test, check-config]
+        options: [run-once, preflight, status, check-sources, check-telegram, send-test, announce, check-config]
 
 concurrency:
   group: newsbot          # nie zwei Läufe gleichzeitig
