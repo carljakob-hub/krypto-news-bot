@@ -1,0 +1,169 @@
+# Quellenliste. Jede Quelle wird ausschließlich lesend abgerufen.
+#
+# tier:
+#   primary      = offizielle Primärquelle (Behörde, Zentralbank, Projektteam, Börse über die eigene Domain)
+#   established  = etablierter Nachrichtenanbieter mit Redaktion
+#   secondary    = sonstige Fachseiten / Aggregatoren
+#   social       = soziale Medien; zählt NIE als Bestätigung
+# trust:        0.0 - 1.0
+# owner_group:  Quellen derselben Gruppe gelten NICHT als unabhängig voneinander
+# official_domains: Domains, deren Dokumente als Primärbeleg gelten
+#
+# HINWEIS: Die Feed-URLs wurden nach bestem Wissen eingetragen, konnten in der
+# Entwicklungsumgebung aber nicht live abgerufen werden. Prüfe sie mit
+#   newsbot check-sources
+# und deaktiviere (enabled: false) oder korrigiere Quellen, die fehlschlagen.
+# Prüfe außerdem die Nutzungsbedingungen jedes Anbieters.
+
+primary_domains:
+  - sec.gov
+  - federalreserve.gov
+  - ecb.europa.eu
+  - cftc.gov
+  - bls.gov
+  - bea.gov
+  - treasury.gov
+  - whitehouse.gov
+  - congress.gov
+  - esma.europa.eu
+  - eba.europa.eu
+  - eur-lex.europa.eu
+  - bafin.de
+  - bundesbank.de
+  - bankofengland.co.uk
+  - fca.org.uk
+  - boj.or.jp
+  - imf.org
+  - bis.org
+  - justice.gov
+  - finra.org
+  - ethereum.org
+  - blog.ethereum.org
+  - bitcoincore.org
+  - bitcoin.org
+  - solana.com
+  - coinbase.com
+  - kraken.com
+  - binance.com
+  - blackrock.com
+  - ishares.com
+  - fidelity.com
+  - grayscale.com
+  - microstrategy.com
+  - strategy.com
+  - tether.to
+  - circle.com
+
+sources:
+  # --- Primärquellen ---------------------------------------------------------
+  - id: sec_press
+    name: "U.S. SEC – Press Releases"
+    url: "https://www.sec.gov/news/pressreleases.rss"
+    tier: primary
+    trust: 1.0
+    owner_group: sec
+    official_domains: [sec.gov]
+    poll_interval_seconds: 180
+    topics: [regulation, etf]
+  - id: fed_press
+    name: "Federal Reserve – Press Releases"
+    url: "https://www.federalreserve.gov/feeds/press_all.xml"
+    tier: primary
+    trust: 1.0
+    owner_group: fed
+    official_domains: [federalreserve.gov]
+    poll_interval_seconds: 180
+    topics: [macro, central_bank]
+  - id: ecb_press
+    name: "Europäische Zentralbank – Pressemitteilungen"
+    url: "https://www.ecb.europa.eu/rss/press.html"
+    tier: primary
+    trust: 1.0
+    owner_group: ecb
+    official_domains: [ecb.europa.eu]
+    poll_interval_seconds: 300
+    topics: [macro, central_bank, regulation]
+  - id: cftc_press
+    name: "U.S. CFTC – General Press Releases"
+    url: "https://www.cftc.gov/RSS/RSSGP/rssgp.xml"
+    tier: primary
+    trust: 1.0
+    owner_group: cftc
+    official_domains: [cftc.gov]
+    poll_interval_seconds: 300
+    topics: [regulation]
+  - id: bls_latest
+    name: "U.S. Bureau of Labor Statistics – Latest Releases"
+    url: "https://www.bls.gov/feed/bls_latest.rss"
+    tier: primary
+    trust: 1.0
+    owner_group: bls
+    official_domains: [bls.gov]
+    poll_interval_seconds: 300
+    topics: [macro]
+  - id: ethereum_blog
+    name: "Ethereum Foundation Blog"
+    url: "https://blog.ethereum.org/feed.xml"
+    tier: primary
+    trust: 0.95
+    owner_group: ethereum_foundation
+    official_domains: [blog.ethereum.org, ethereum.org]
+    poll_interval_seconds: 900
+    topics: [network]
+  - id: esma_news
+    name: "ESMA – News"
+    url: "https://www.esma.europa.eu/rss.xml"
+    tier: primary
+    trust: 1.0
+    owner_group: esma
+    official_domains: [esma.europa.eu]
+    poll_interval_seconds: 900
+    topics: [regulation]
+    enabled: true
+
+  # --- Etablierte Nachrichtenanbieter -----------------------------------------
+  - id: coindesk
+    name: "CoinDesk"
+    url: "https://www.coindesk.com/arc/outboundfeeds/rss/"
+    tier: established
+    trust: 0.8
+    owner_group: coindesk
+    poll_interval_seconds: 180
+  - id: theblock
+    name: "The Block"
+    url: "https://www.theblock.co/rss.xml"
+    tier: established
+    trust: 0.8
+    owner_group: theblock
+    poll_interval_seconds: 180
+  - id: decrypt
+    name: "Decrypt"
+    url: "https://decrypt.co/feed"
+    tier: established
+    trust: 0.7
+    owner_group: decrypt
+    poll_interval_seconds: 300
+  - id: cointelegraph
+    name: "Cointelegraph"
+    url: "https://cointelegraph.com/rss"
+    tier: established
+    trust: 0.65
+    owner_group: cointelegraph
+    poll_interval_seconds: 300
+  - id: bitcoinmagazine
+    name: "Bitcoin Magazine"
+    url: "https://bitcoinmagazine.com/.rss/full/"
+    tier: secondary
+    trust: 0.6
+    owner_group: btc_inc
+    poll_interval_seconds: 600
+
+  # --- Weitere Quellen (standardmäßig aus) ------------------------------------
+  - id: rekt_news
+    name: "rekt.news (Sicherheitsvorfälle)"
+    url: "https://rekt.news/rss.xml"
+    tier: secondary
+    trust: 0.55
+    owner_group: rekt
+    poll_interval_seconds: 900
+    enabled: false

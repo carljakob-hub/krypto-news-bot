@@ -1,0 +1,80 @@
+# Betrieb ohne eigenen Server: GitHub startet den Bot alle 5 Minuten für einen Durchlauf.
+# Der Zustand (Datenbank + Beitragsprotokoll) wird zwischen den Läufen im Branch "state" gespeichert.
+# Zugangsdaten liegen ausschließlich in den verschlüsselten "Secrets" des Repositorys.
+name: newsbot
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "Befehl"
+        type: choice
+        default: run-once
+        options: [run-once, preflight, status, check-sources, check-telegram, check-config]
+
+concurrency:
+  group: newsbot          # nie zwei Läufe gleichzeitig
+  cancel-in-progress: false
+
+permissions:
+  contents: write         # nur für den Branch "state"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEWSBOT_MODE: ${{ vars.NEWSBOT_MODE || 'test' }}
+      NEWSBOT_DB_PATH: data/newsbot.sqlite3
+      NEWSBOT_LOG_LEVEL: INFO
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      TELEGRAM_TOPIC_ID: ${{ secrets.TELEGRAM_TOPIC_ID }}
+      TELEGRAM_TEST_CHAT_ID: ${{ secrets.TELEGRAM_TEST_CHAT_ID }}
+      TELEGRAM_TEST_TOPIC_ID: ${{ secrets.TELEGRAM_TEST_TOPIC_ID }}
+      TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Installieren
+        run: |
+          pip install -r requirements-dev.txt
+          pip install --no-deps .
+
+      - name: Zustand laden
+        run: |
+          mkdir -p data
+          if git ls-remote --exit-code --heads origin state >/dev/null; then
+            git fetch --depth=1 origin state
+            git show origin/state:newsbot.sqlite3 > data/newsbot.sqlite3 || rm -f data/newsbot.sqlite3
+            git show origin/state:posts.log > data/posts.log 2>/dev/null || true
+          fi
+
+      - name: Bot ausführen
+        # Geplante Läufe sollen bei Quellenausfällen keine E-Mail-Flut auslösen; Warnungen kommen per Telegram.
+        continue-on-error: ${{ github.event_name == 'schedule' }}
+        run: newsbot ${{ github.event.inputs.command || 'run-once' }}
+
+      - name: Zustand speichern
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          test -f data/newsbot.sqlite3 || exit 0
+          tail -c 2000000 data/posts.log > /tmp/posts.log 2>/dev/null || touch /tmp/posts.log
+          mkdir /tmp/state && cd /tmp/state
+          git init -q -b state
+          cp "$GITHUB_WORKSPACE/data/newsbot.sqlite3" .
+          cp /tmp/posts.log posts.log
+          git -c user.name=newsbot -c user.email=newsbot@users.noreply.github.com add .
+          git -c user.name=newsbot -c user.email=newsbot@users.noreply.github.com commit -qm "Zustand $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" state

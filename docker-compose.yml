@@ -1,0 +1,24 @@
+services:
+  newsbot:
+    build: .
+    image: krypto-news-bot:latest
+    container_name: krypto-news-bot
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/app/data            # Datenbank und Beitragsprotokoll (persistent)
+      - ./config:/app/config:ro     # Regeln und Quellen, nur lesbar
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "krypto-news-bot"
+version = "0.1.0"
+description = "Autonomer Bot für verifizierte, tradingrelevante Krypto-News mit Telegram-Veröffentlichung"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27,<1",
+    "feedparser>=6.0,<7",
+    "PyYAML>=6.0,<7",
+    "pydantic>=2.6,<3",
+    "anthropic>=2.1,<3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+newsbot = "newsbot.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+newsbot = ["db/migrations/*.sql"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+pythonpath = ["src"]
