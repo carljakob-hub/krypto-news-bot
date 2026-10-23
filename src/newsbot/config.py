@@ -7,6 +7,7 @@ import json
 import os
 import re
 import unicodedata
+import urllib.parse
 from enum import Enum
 from pathlib import Path
 from typing import Literal
@@ -242,6 +243,8 @@ def load_secrets(env: dict[str, str] | None = None) -> Secrets:
     if token:
         # Handy-Tastaturen ersetzen gern Zeichen; wer die ganze BotFather-Nachricht
         # einfügt, soll trotzdem ans Ziel kommen.
+        if "%" in token:  # aus einem Link kopiert, z. B. "%3A" statt ":"
+            token = urllib.parse.unquote(token)
         token = re.sub(r"[\uff1a\u2236\ua789\u02d0\u02f8\ufe55\ufe13]", ":", token)
         token = re.sub(r"(?<=:)\s+|\s+(?=:)", "", token)
         found = re.search(r"(?<!\d)\d{6,12}:[A-Za-z0-9_-]{25,}", token)
