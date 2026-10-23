@@ -81,6 +81,7 @@ class PublishingConfig(BaseModel):
     duplicate_similarity: float = Field(0.55, gt=0, le=1)
     post_log_file: str = "data/posts.log"
     disclaimer: str = "Keine Anlageberatung."
+    mark_test_posts: bool = True  # "[TESTMODUS]" über Beiträge im Testmodus setzen
 
 
 class MonitoringConfig(BaseModel):

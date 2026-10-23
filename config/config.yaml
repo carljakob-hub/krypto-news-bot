@@ -43,6 +43,7 @@ publishing:
   duplicate_similarity: 0.55
   post_log_file: data/posts.log      # Jeder Beitrag wird hier zusätzlich protokolliert (Testmodus: nur hier)
   disclaimer: "Keine Anlageberatung. Automatisch erstellt und anhand der genannten Quellen geprüft."
+  mark_test_posts: false          # Kein "[TESTMODUS]"-Hinweis in der Gruppe (Wunsch Jakob, 23.10.2026)
 
 monitoring:
   alert_no_successful_research_minutes: 45

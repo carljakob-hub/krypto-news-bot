@@ -82,6 +82,7 @@ def app_factory(base_dir):
 
 async def test_verified_story_is_published_once_to_log(app_factory, now):
     app, settings, _ = app_factory()
+    app.pipeline.cfg.publishing.mark_test_posts = True
     stats = await app.pipeline.run_cycle(now)
     assert stats.published == 1
     log = posts_log(settings)
@@ -246,3 +247,12 @@ async def test_posts_only_into_configured_topic(app_factory, now):
         "TELEGRAM_BOT_TOKEN": TOKEN, "TELEGRAM_TEST_CHAT_ID": str(TEST_CHAT), "TELEGRAM_TEST_TOPIC_ID": "12"})
     await app.pipeline.run_cycle(now)
     assert [(m["chat_id"], m["message_thread_id"]) for m in tg.sent] == [(TEST_CHAT, 12)]
+
+
+async def test_test_mode_marker_can_be_disabled(app_factory, now):
+    app, settings, _ = app_factory()
+    app.pipeline.cfg.publishing.mark_test_posts = False
+    stats = await app.pipeline.run_cycle(now)
+    assert stats.published == 1
+    log = posts_log(settings)
+    assert "[TESTMODUS]" not in log and "HOHE RELEVANZ" in log

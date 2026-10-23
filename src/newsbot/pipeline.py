@@ -177,7 +177,7 @@ class Pipeline:
         content = await self.summarizer.compose(items, v, rel, now)
         names = {i.url: self.cfg.source(i.source_id).name for i in items if self.cfg.source(i.source_id)}
         try:
-            text = format_post(content, v, rel, names, self.cfg, now, test_mode=self.settings.mode is Mode.TEST)
+            text = format_post(content, v, rel, names, self.cfg, now, test_mode=self.settings.mode is Mode.TEST and self.cfg.publishing.mark_test_posts)
         except ValueError as exc:
             log.warning("Cluster %s nicht veröffentlicht: %s", cluster["id"], exc)
             return False
