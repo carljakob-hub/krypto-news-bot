@@ -12,7 +12,7 @@ on:
         description: "Befehl"
         type: choice
         default: run-once
-        options: [run-once, preflight, status, check-sources, check-telegram, check-config]
+        options: [run-once, preflight, status, check-sources, check-telegram, send-test, check-config]
 
 concurrency:
   group: newsbot          # nie zwei Läufe gleichzeitig
@@ -62,7 +62,10 @@ jobs:
       - name: Bot ausführen
         # Geplante Läufe sollen bei Quellenausfällen keine E-Mail-Flut auslösen; Warnungen kommen per Telegram.
         continue-on-error: ${{ github.event_name == 'schedule' }}
-        run: newsbot ${{ github.event.inputs.command || 'run-once' }}
+        env:
+          CMD: ${{ github.event.inputs.command || 'run-once' }}
+        run: |
+          if [ "$CMD" = "send-test" ]; then newsbot check-telegram --send-test; else newsbot "$CMD"; fi
 
       - name: Zustand speichern
         if: always()
