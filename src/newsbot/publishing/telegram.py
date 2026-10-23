@@ -143,6 +143,17 @@ class TelegramClient:
             raise TelegramError("sendMessage: Antwort ohne message_id")
         return int(result["message_id"])
 
+    async def edit_message(self, chat_id: int, message_id: int, text: str, *, disable_preview: bool = True) -> None:
+        if chat_id not in self.allowed:
+            raise ChatNotAllowedError(f"Chat {chat_id} ist nicht als Ziel konfiguriert – Bearbeiten verweigert")
+        await self._call("editMessageText", {
+            "chat_id": chat_id,
+            "message_id": message_id,
+            "text": text,
+            "parse_mode": "HTML",
+            "link_preview_options": {"is_disabled": disable_preview},
+        })
+
     async def check_chat(self, chat_id: int, *, require_group: bool) -> ChatCheck:
         """Prüft Token, Chat-Existenz, Chat-Typ und Schreibrechte des Bots."""
         problems: list[str] = []

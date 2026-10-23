@@ -259,6 +259,41 @@ async def _announce(settings: Settings, path: str) -> int:
         await client.aclose()
 
 
+TEST_MARKER = "🧪 <b>[TESTMODUS]</b>\n"
+
+
+async def _strip_test_marker(settings: Settings) -> int:
+    """Entfernt den Testmodus-Hinweis aus bereits gesendeten Beiträgen."""
+    if not settings.secrets.telegram_bot_token:
+        print("✗ TELEGRAM_BOT_TOKEN fehlt")
+        return 1
+    app = build_app(settings)
+    rows = app.db.conn.execute(
+        "SELECT id, chat_id, message_id, text FROM publications "
+        "WHERE status='sent' AND message_id IS NOT NULL AND text LIKE ?", (f"%{TEST_MARKER.strip()}%",)
+    ).fetchall()
+    client = TelegramClient(settings.secrets.telegram_bot_token, {r["chat_id"] for r in rows})
+    failed = 0
+    try:
+        for r in rows:
+            new_text = r["text"].replace(TEST_MARKER, "", 1)
+            try:
+                await client.edit_message(r["chat_id"], r["message_id"], new_text)
+            except TelegramError as exc:
+                if "not modified" not in str(exc):
+                    failed += 1
+                    print(f"✗ Beitrag {r['id']}: {exc}")
+                    continue
+            app.db.conn.execute("UPDATE publications SET text=? WHERE id=?", (new_text, r["id"]))
+            app.db.conn.commit()
+            print(f"✓ Beitrag {r['id']} bereinigt")
+    finally:
+        await client.aclose()
+        await app.aclose()
+    print(f"{len(rows) - failed} von {len(rows)} Beiträgen bereinigt")
+    return 1 if failed else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="newsbot", description="Verifizierte Krypto-News für Telegram")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -274,6 +309,7 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("--max-cycles", type=int, default=None, help="Nach N Durchläufen beenden (z. B. für GitHub Actions)")
     p_an = sub.add_parser("announce", help="Hinterlegte Nachricht in die Zielgruppe senden")
     p_an.add_argument("--file", default="config/announcement.html")
+    sub.add_parser("strip-test-marker", help="[TESTMODUS] aus gesendeten Beiträgen entfernen")
     p_st = sub.add_parser("status", help="Monitoring-Bericht anzeigen")
     p_st.add_argument("--hours", type=int, default=24)
     sub.add_parser("health", help="Healthcheck (Exit-Code 0 = gesund)")
@@ -309,6 +345,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(_run(settings, once=False, max_cycles=args.max_cycles))
     if args.cmd == "announce":
         return asyncio.run(_announce(settings, args.file))
+    if args.cmd == "strip-test-marker":
+        return asyncio.run(_strip_test_marker(settings))
     if args.cmd == "status":
         return cmd_status(settings, args)
     if args.cmd == "health":
