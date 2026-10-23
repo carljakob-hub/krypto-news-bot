@@ -234,7 +234,10 @@ def _describe_bad_token(value: str) -> str:
         digits = len(value) - len(value.lstrip("0123456789"))
         return (f"ohne Doppelpunkt ({spaces} Leerzeichen, {other} Sonderzeichen: {', '.join(names) or '-'}; "
                 f"beginnt mit {digits} Ziffern)")
-    return "Schlüsselteil zu kurz"
+    key = value.split(":", 1)[1]
+    names = sorted({unicodedata.name(c, hex(ord(c))) for c in key
+                    if not (c.isascii() and (c.isalnum() or c in "_-"))})
+    return f"Schlüsselteil hat {len(key)} Zeichen, davon unerwartet: {', '.join(names) or '-'}"
 
 
 def load_secrets(env: dict[str, str] | None = None) -> Secrets:
@@ -245,6 +248,7 @@ def load_secrets(env: dict[str, str] | None = None) -> Secrets:
         # einfügt, soll trotzdem ans Ziel kommen.
         if "%" in token:  # aus einem Link kopiert, z. B. "%3A" statt ":"
             token = urllib.parse.unquote(token)
+        token = re.sub(r"\s+", "", token)  # ein Token enthält nie Leerraum
         token = re.sub(r"[\uff1a\u2236\ua789\u02d0\u02f8\ufe55\ufe13]", ":", token)
         token = re.sub(r"(?<=:)\s+|\s+(?=:)", "", token)
         found = re.search(r"(?<!\d)\d{6,12}:[A-Za-z0-9_-]{25,}", token)
