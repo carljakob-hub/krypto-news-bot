@@ -4,9 +4,10 @@ name: marktupdate
 
 on:
   schedule:
-    # Jede Stunde um :35 starten; marktbot/wait_for_hour.py wartet bis zur vollen Stunde und sendet
-    # nur zu den Berliner Uhrzeiten in POST_HOURS. So kommt das Update pünktlich (GitHub startet oft verspätet).
-    - cron: "35 * * * *"
+    # Zweimal pro Stunde starten (GitHub startet oft 20–30 Min. verspätet); marktbot/wait_for_hour.py wartet
+    # bis zur vollen Stunde und sendet nur zu den Berliner Uhrzeiten in POST_HOURS. Ein Cache-Eintrag je
+    # Stunde verhindert, dass beide Läufe senden.
+    - cron: "10,35 * * * *"
   workflow_dispatch:      # "Run workflow" zum sofortigen Testen
     inputs:
       command:
@@ -25,7 +26,7 @@ permissions:
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
       - name: Bis zur vollen Stunde warten
@@ -36,16 +37,33 @@ jobs:
         run: |
           rc=0; python3 marktbot/wait_for_hour.py || rc=$?
           if [ "$rc" = 0 ]; then echo "go=1" >> "$GITHUB_OUTPUT"; elif [ "$rc" != 78 ]; then exit "$rc"; fi
+      - name: Schon gesendet?
+        id: sent
+        if: steps.wait.outputs.go == '1'
+        uses: actions/cache/restore@v4
+        with:
+          path: .marktupdate-sent
+          key: marktupdate-sent-${{ steps.wait.outputs.slot }}
+          lookup-only: true
       - uses: actions/setup-python@v6
-        if: github.event_name != 'schedule' || steps.wait.outputs.go == '1'
+        if: github.event_name != 'schedule' || (steps.wait.outputs.go == '1' && steps.sent.outputs.cache-hit != 'true')
         with:
           python-version: "3.12"
       - run: pip install "requests>=2.31"
-        if: github.event_name != 'schedule' || steps.wait.outputs.go == '1'
+        if: github.event_name != 'schedule' || (steps.wait.outputs.go == '1' && steps.sent.outputs.cache-hit != 'true')
       - run: python marktbot/bot.py
-        if: github.event_name != 'schedule' || steps.wait.outputs.go == '1'
+        if: github.event_name != 'schedule' || (steps.wait.outputs.go == '1' && steps.sent.outputs.cache-hit != 'true')
         env:
           ANNOUNCE: ${{ github.event.inputs.command == 'announce' && '1' || '' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.MARKT_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.MARKT_CHAT_ID || secrets.TELEGRAM_CHAT_ID || '-1004454200462' }}  # CJ Trades
           TELEGRAM_TOPIC_ID: ${{ secrets.MARKT_TOPIC_ID || '54' }}  # Thema Market Update
+      - name: Sendung merken
+        if: github.event_name == 'schedule' && steps.wait.outputs.go == '1' && steps.sent.outputs.cache-hit != 'true'
+        run: mkdir -p .marktupdate-sent && date -u > .marktupdate-sent/at
+      - name: Sendung merken (Cache)
+        if: github.event_name == 'schedule' && steps.wait.outputs.go == '1' && steps.sent.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .marktupdate-sent
+          key: marktupdate-sent-${{ steps.wait.outputs.slot }}
