@@ -6,7 +6,7 @@ der 100 größten Coins (24h, ohne Stablecoins). Daten: CoinGecko, kostenlos, ke
 
 Nutzt dieselben Secrets wie der Newsbot (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`). Optional:
 - `MARKT_BOT_TOKEN`: Token eines eigenen Bots (z. B. „Market Update“), sonst postet der Newsbot-Bot
-- `MARKT_TOPIC_ID`: Thema in der Gruppe, in das die Updates gehen (sonst „Allgemein“)
+- `MARKT_TOPIC_ID`: Thema in der Gruppe, in das die Updates gehen (Standard: 54 = Thema „Market Update“ in CJ Trades)
 - `MARKT_CHAT_ID`: andere Gruppe als der Newsbot
 
 Testen: Actions → marktupdate → Run workflow. Lokal: `DRY_RUN=1 python marktbot/bot.py`.
