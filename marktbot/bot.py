@@ -38,11 +38,23 @@ NAMES = {"pax-gold": "Gold (PAXG)"}
 
 
 def fetch_markets(params):
-    base = {"vs_currency": "usd", "price_change_percentage": "24h"}
+    base = {"vs_currency": "usd", "price_change_percentage": "24h", "sparkline": "true"}
     base.update(params)
     resp = requests.get(COINGECKO, params=base, timeout=30)
     resp.raise_for_status()
-    return resp.json()
+    coins = resp.json()
+    for c in coins:
+        c["change_4h"] = change_4h(c)
+    return coins
+
+
+def change_4h(coin):
+    """Veränderung der letzten 4 Stunden aus dem stündlichen 7-Tage-Verlauf."""
+    prices = (coin.get("sparkline_in_7d") or {}).get("price") or []
+    now = coin.get("current_price")
+    if len(prices) < 5 or not now or not prices[-5]:
+        return None
+    return (now / prices[-5] - 1) * 100
 
 
 def usd(value):
@@ -62,6 +74,13 @@ def pct(value):
     return f"{arrow} {value:+.2f}%"
 
 
+def mover_line(rank, coin):
+    line = f"{rank}. {coin['name']} ({coin['symbol'].upper()}) {pct(coin['change_4h'])}"
+    if coin.get("price_change_percentage_24h") is not None:
+        line += f"  (24h {coin['price_change_percentage_24h']:+.1f}%)"
+    return line
+
+
 def build_message():
     watchlist = os.environ.get("WATCHLIST", DEFAULT_WATCHLIST)
     universe_size = int(os.environ.get("TOP_N_UNIVERSE", "100"))
@@ -78,28 +97,29 @@ def build_message():
     movers = [
         c for c in universe
         if c["id"] not in EXCLUDE_FROM_MOVERS
-        and c.get("price_change_percentage_24h") is not None
+        and c.get("change_4h") is not None
     ]
-    movers.sort(key=lambda c: c["price_change_percentage_24h"], reverse=True)
+    movers.sort(key=lambda c: c["change_4h"], reverse=True)
     gainers = movers[:3]
     losers = movers[-3:][::-1]
 
     now = datetime.now(ZoneInfo("Europe/Berlin")).strftime("%d.%m.%Y %H:%M Uhr")
-    lines = [f"📊 <b>Markt-Update</b> · {now}", "", "<b>Hoch / Tief (24h)</b>"]
+    lines = [f"📊 <b>Markt-Update</b> · {now}", "", "<b>Kurs · Bewegung · Hoch / Tief (24h)</b>"]
     for c in watched:
         name = NAMES.get(c["id"], c["name"])
         lines.append(
-            f"<b>{name}</b>: {usd(c['current_price'])} {pct(c.get('price_change_percentage_24h'))}\n"
+            f"<b>{name}</b>: {usd(c['current_price'])}\n"
+            f"   4h {pct(c.get('change_4h'))} · 24h {pct(c.get('price_change_percentage_24h'))}\n"
             f"   ⬆️ {usd(c.get('high_24h'))}  ⬇️ {usd(c.get('low_24h'))}"
         )
 
-    lines += ["", f"🚀 <b>Top 3 Gewinner (24h, Top {universe_size})</b>"]
+    lines += ["", f"🚀 <b>Top 3 Gewinner (4h, Top {universe_size})</b>"]
     for i, c in enumerate(gainers, 1):
-        lines.append(f"{i}. {c['name']} ({c['symbol'].upper()}) {pct(c['price_change_percentage_24h'])}")
+        lines.append(mover_line(i, c))
 
-    lines += ["", f"📉 <b>Top 3 Verlierer (24h, Top {universe_size})</b>"]
+    lines += ["", f"📉 <b>Top 3 Verlierer (4h, Top {universe_size})</b>"]
     for i, c in enumerate(losers, 1):
-        lines.append(f"{i}. {c['name']} ({c['symbol'].upper()}) {pct(c['price_change_percentage_24h'])}")
+        lines.append(mover_line(i, c))
 
     lines += ["", "<i>Daten: CoinGecko · keine Anlageberatung</i>"]
     return "\n".join(lines)
