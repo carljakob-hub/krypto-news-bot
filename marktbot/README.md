@@ -10,4 +10,4 @@ Nutzt dieselben Secrets wie der Newsbot (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID
 - `MARKT_CHAT_ID`: andere Gruppe als der Newsbot
 
 Testen: Actions → marktupdate → Run workflow. Lokal: `DRY_RUN=1 python marktbot/bot.py`.
-Intervall: `cron`-Zeile in `.github/workflows/marktupdate.yml`.
+Sendezeiten: pünktlich zur vollen Stunde um 2, 6, 10, 14, 18 und 22 Uhr (Berliner Zeit), einstellbar über `POST_HOURS` in `.github/workflows/marktupdate.yml`. Der Workflow startet jede Stunde um :35 und `marktbot/wait_for_hour.py` wartet bis zur vollen Stunde, weil GitHub geplante Läufe oft verspätet startet.

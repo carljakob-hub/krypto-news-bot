@@ -4,8 +4,9 @@ name: marktupdate
 
 on:
   schedule:
-    # Zeiten in UTC. Andere Intervalle: alle 2 Std. "0 */2 * * *", alle 6 Std. "0 */6 * * *"
-    - cron: "0 */4 * * *"
+    # Jede Stunde um :35 starten; marktbot/wait_for_hour.py wartet bis zur vollen Stunde und sendet
+    # nur zu den Berliner Uhrzeiten in POST_HOURS. So kommt das Update pünktlich (GitHub startet oft verspätet).
+    - cron: "35 * * * *"
   workflow_dispatch:      # "Run workflow" zum sofortigen Testen
     inputs:
       command:
@@ -24,14 +25,25 @@ permissions:
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
+      - name: Bis zur vollen Stunde warten
+        id: wait
+        if: github.event_name == 'schedule'
+        env:
+          POST_HOURS: "2,6,10,14,18,22"   # Berliner Uhrzeit
+        run: |
+          rc=0; python3 marktbot/wait_for_hour.py || rc=$?
+          if [ "$rc" = 0 ]; then echo "go=1" >> "$GITHUB_OUTPUT"; elif [ "$rc" != 78 ]; then exit "$rc"; fi
       - uses: actions/setup-python@v6
+        if: github.event_name != 'schedule' || steps.wait.outputs.go == '1'
         with:
           python-version: "3.12"
       - run: pip install "requests>=2.31"
+        if: github.event_name != 'schedule' || steps.wait.outputs.go == '1'
       - run: python marktbot/bot.py
+        if: github.event_name != 'schedule' || steps.wait.outputs.go == '1'
         env:
           ANNOUNCE: ${{ github.event.inputs.command == 'announce' && '1' || '' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.MARKT_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
