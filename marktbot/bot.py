@@ -12,6 +12,7 @@ Optional:
   WATCHLIST           CoinGecko-IDs, kommagetrennt
   TOP_N_UNIVERSE      Wie viele der größten Coins für Gewinner/Verlierer (Standard 100)
   DRY_RUN=1           Nachricht nur ausgeben, nicht senden
+  ANNOUNCE=1          Vorstellungsnachricht (announcement.html) statt Update senden
 """
 
 import os
@@ -125,7 +126,12 @@ def send(text):
 
 
 def main():
-    text = build_message()
+    if os.environ.get("ANNOUNCE") == "1":
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "announcement.html")
+        with open(path, encoding="utf-8") as f:
+            text = f.read().strip()
+    else:
+        text = build_message()
     if os.environ.get("DRY_RUN") == "1":
         print(text)
     else:
