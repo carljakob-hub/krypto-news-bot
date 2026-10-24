@@ -1,0 +1,32 @@
+# Markt-Update: alle 4 Stunden Hoch/Tief von Bitcoin, Ethereum & Co. plus Gold
+# und die Top 3 Gewinner/Verlierer. Nutzt denselben Bot und dieselbe Gruppe wie der Newsbot.
+name: marktupdate
+
+on:
+  schedule:
+    # Zeiten in UTC. Andere Intervalle: alle 2 Std. "0 */2 * * *", alle 6 Std. "0 */6 * * *"
+    - cron: "0 */4 * * *"
+  workflow_dispatch: {}   # "Run workflow" zum sofortigen Testen
+
+concurrency:
+  group: marktupdate
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install "requests>=2.31"
+      - run: python marktbot/bot.py
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.MARKT_BOT_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.MARKT_CHAT_ID || secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_TOPIC_ID: ${{ secrets.MARKT_TOPIC_ID || '54' }}  # Thema Market Update
