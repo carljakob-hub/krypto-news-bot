@@ -16,7 +16,8 @@ Optional:
 
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -82,7 +83,7 @@ def build_message():
     gainers = movers[:3]
     losers = movers[-3:][::-1]
 
-    now = datetime.now(timezone.utc).strftime("%d.%m.%Y %H:%M UTC")
+    now = datetime.now(ZoneInfo("Europe/Berlin")).strftime("%d.%m.%Y %H:%M Uhr")
     lines = [f"📊 <b>Markt-Update</b> · {now}", "", "<b>Hoch / Tief (24h)</b>"]
     for c in watched:
         name = NAMES.get(c["id"], c["name"])
